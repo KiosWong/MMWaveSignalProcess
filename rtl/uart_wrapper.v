@@ -28,6 +28,7 @@ end
 
 //assign uart_tx_start = (cnt == 32'd50_000_000 - 1) ? 1 : 0;
 wire [7:0]rs232_rx_data;
+wire uart_tx_int;
 
 uart_top
 #(
@@ -42,7 +43,7 @@ u_uart_top
 	.rs232_tx_start(uart_tx_start),
 	.rs232_tx_data_i(rs232_rx_data),
 	.rs232_tx_data_o(rs232_tx_data_o),
-	.rs232_tx_int(),
+	.rs232_tx_int(uart_tx_int),
 
 	.rs232_rx_data_i(rs232_rx_data_i),
 	.rs232_rx_data_o(rs232_rx_data),
@@ -51,9 +52,9 @@ u_uart_top
 
 ila_1 uart_rx_probe (
 	.clk(clk), // input wire clk
-
-
-	.probe0(rs232_rx_data) // input wire [7:0] probe0
+	.probe0({12'b0,rs232_rx_data}), // input wire [7:0] probe0
+	.probe1({12'b0,uart_tx_start}),
+	.probe2({12'b0,uart_tx_int})
 );
 
 

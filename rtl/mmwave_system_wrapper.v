@@ -1,12 +1,15 @@
 `timescale 1ns / 1ps
 
-module ad9226_wrapper
+module mmwave_system_wrapper
 #(
 	parameter SYS_CLK_FREQ_MHZ	= 50
 )
 (
 	input clk,
 	input rst_n,
+	
+	output vco_da_clk_o,
+	output [9:0]vco_out_o,
 	
 	input [12:0]ad_data_i,
 	output ad_clk_o,
@@ -28,6 +31,27 @@ module ad9226_wrapper
 	output [7:0] e_txd
 );
 
+wire w_vco_mode;
+wire [31:0]w_vco_trigger_freq_psc;
+wire [4:0]w_vco_chirp_num;
+wire [15:0]w_vco_chirp_freq_psc;
+
+vco_comp_wrapper
+#(
+	.SYS_CLK_FREQ_MHZ(50)
+)
+u_vco_comp_wrapper
+(
+	.clk(clk),
+	.rst_n(rst_n),
+	.mode_sel_i(w_vco_mode),
+	.trigger_freq_psc_i(w_vco_trigger_freq_psc),
+	.chirp_num_i(w_vco_chirp_num),
+	.chirp_freq_psc_i(w_vco_chirp_freq_psc),
+	.vco_da_clk_o(vco_da_clk_o),
+	.vco_out_o(vco_out_o)
+);
+
 wire s_ad_frontend_en;
 wire [12:0]w_ad_frontend_out_data;
 wire w_ad_data_valid;
@@ -37,7 +61,7 @@ ad9226 u_ad_frontend
 	.clk(clk),
 	.rst_n(rst_n),
 	.en(s_ad_frontend_en),
-	.clk_psc_period_i(32'd50),	//20KHz @ 50MHz sys clk freq
+	.clk_psc_period_i(32'd50_000),	//20KHz @ 50MHz sys clk freq
 	.ad_data_i(ad_data_i),
 	.ad_clk_o(ad_clk_o),
 	.ad_data_o(w_ad_frontend_out_data),
@@ -57,7 +81,7 @@ u_dowm_sample
 	.clk(clk),
 	.rst_n(rst_n),
 
-	.sample_psc_i(16'd2),
+	.sample_psc_i(16'd200),
 	.raw_data_valid_i(w_ad_data_valid),
 	.raw_data_i(w_ad_frontend_out_data),
 	.sampled_data_valid_o(sampled_data_valid_o),
@@ -348,11 +372,11 @@ udp_top u_udp_top(
 //	.probe3(0), // input wire [0:0]  probe3 
 //	.probe4(0) // input wire [0:0]  probe4
 //);
-ila_0 your_instance_name (
-	.clk(e_rxc), // input wire clk
-	.probe0(e_txd), // input wire [7:0] probe0
-	.probe1(e_rxc), // input wire [0:0]  probe1
-	.probe2({31'b0, s_eth_tx_start}) // input wire [31:0]  probe2
-);
+//ila_0 your_instance_name (
+//	.clk(e_rxc), // input wire clk
+//	.probe0(e_txd), // input wire [7:0] probe0
+//	.probe1(e_rxc), // input wire [0:0]  probe1
+//	.probe2({31'b0, s_eth_tx_start}) // input wire [31:0]  probe2
+//);
 
 endmodule

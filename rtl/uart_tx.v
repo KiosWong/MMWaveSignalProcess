@@ -164,7 +164,7 @@ always@(posedge clk or negedge rst_n) begin
 	if(!rst_n) begin
 		bps_clk_cnt <= 4'b0;
 	end
-	else if(bps_clk_cnt == 4'd10) begin
+	else if(bps_clk_cnt == 4'd11) begin
 		bps_clk_cnt <= 4'b0;
 	end
 	else if(tx_bps_clk) begin
@@ -179,7 +179,7 @@ always@(posedge clk or negedge rst_n) begin
 	if(!rst_n) begin
 		rs232_tx_int <= 1'b0;
 	end
-	else if(bps_clk_cnt == 4'd10) begin
+	else if(bps_clk_cnt == 4'd11) begin
 		rs232_tx_int <= 1'b1;
 	end
 	else begin

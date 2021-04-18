@@ -336,6 +336,9 @@ assign wr_ptr_gray_2dff = r_wr_ptr_gray[1];
 assign fifo_empty = (rd_ptr_gray == wr_ptr_gray_2dff) ? 1 : 0;
 assign fifo_full =  (wr_ptr_gray == {~rd_ptr_gray_2dff[ADDR_WIDTH:ADDR_WIDTH-1], rd_ptr_gray_2dff[ADDR_WIDTH-2:0]}) ? 1 : 0;
 
+reg r_fifo_empty;
+reg r_fifo_full;
+
 assign mem_wr_en_o = (!fifo_full) ? fifo_wr_en : 1'b0;
 assign mem_rd_en_o = (!fifo_empty) ? fifo_rd_en : 1'b0;
 

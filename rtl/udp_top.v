@@ -28,16 +28,8 @@ module udp_top(
 );
 
 assign e_rst = 1'b1; 
-assign e_gtxc=e_rxc;	                //gtxc输出125Mhz的时�?
+assign e_gtxc=e_rxc;	
 
-wire [31:0] datain_reg;
-         
-wire [3:0] tx_state;
-wire [3:0] rx_state;
-
-wire data_o_valid;
-
-////////udp发�?�和接收程序/////////////////// 
 udp u_udp
 (
 	.reset_n(rst_n),
@@ -50,11 +42,9 @@ udp u_udp
 	
 	.data_o_valid(),
 	.rx_total_length(),
-	.rx_state(),
 	.rx_data_length(),
 	
 	.tx_start(tx_start),
-	.tx_state(tx_state),
 	.tx_data_req(tx_data_req),
 	.tx_data(tx_data),
 	.tx_data_length(tx_data_length),	

@@ -20,12 +20,12 @@ module iprecieve(
 
 	 output reg [15:0]  rx_total_length,         //UDP frame的�?�长�?
 	 output reg         data_o_valid,            //UDP数据有效信号// 
-	 output reg [3:0]   rx_state,			         //接收状�?�机	 
 	 output reg [15:0]  rx_data_length,          //接收的UDP数据包的长度
 	 output reg         data_received             //接收到UDP包标�?
 					
  );
 
+reg [3:0]  rx_state;
 reg [15:0] myIP_Prtcl;
 reg [159:0] myIP_layer;
 reg [63:0] myUDP_layer;

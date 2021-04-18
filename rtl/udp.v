@@ -16,13 +16,11 @@ module udp
 	output wire [31:0]  ram_wr_data,                         //接收到的32bit IP包数�?//  
 	output wire [15:0]  rx_total_length,                     //接收IP包的总长�?
 	
-	output wire [3:0]   rx_state,                            //UDP数据接收状�?�机
 	output wire [15:0]  rx_data_length,		                 //接收IP包的数据长度/
 	
 	input 				tx_start,
 	output wire			tx_data_req,
 	input  wire [31:0]  tx_data,                         //ram读出的数�?
-	output [3:0]        tx_state,                            //UDP数据发�?�状态机
 	input  wire [15:0]  tx_data_length,                      //发�?�IP包的数据长度/
 	input  wire [15:0]  tx_total_length,                     //发�?�IP包的总长�?/
 	output wire         data_received
@@ -45,7 +43,6 @@ ipsend ipsend_inst
 	.crcen(crcen),
 	.crcre(crcreset),
 	.tx_start(tx_start),
-	.tx_state(tx_state),
 	.tx_data_length(tx_data_length),
 	.tx_total_length(tx_total_length)
 );
@@ -78,7 +75,6 @@ iprecieve iprecieve_inst
 	.valid_ip_P(),
 	.rx_total_length(rx_total_length),
 	.data_o_valid(data_o_valid),                                       
-	.rx_state(rx_state),
 	.rx_data_length(rx_data_length),
 	.data_received(data_received)	
 );

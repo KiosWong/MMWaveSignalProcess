@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module ad9226_wrapper
+module mmwave_system_wrapper
 #(
 	parameter SYS_CLK_FREQ_MHZ	= 50
 )
@@ -40,7 +40,7 @@ wire [31:0]w_vco_trigger_freq_psc;
 wire [4:0]w_vco_chirp_num;
 wire [15:0]w_vco_chirp_freq_psc;
 
-assign w_vco_mode = 1'b0;
+assign w_vco_mode = 1'b1;
 assign w_vco_trigger_freq_psc = 32'd2_500_000;
 assign w_vco_chirp_num = 5'd2;
 assign w_vco_chirp_freq_psc = 16'd5;
@@ -341,6 +341,7 @@ end
 
 wire s_eth_tx_start;
 assign s_eth_tx_start = r_eth_tx_start[0] & ~r_eth_tx_start[1];
+wire [7:0]w_e_txd;
 
 udp_top u_udp_top(
 	.rst_n(rst_n),                        
@@ -367,21 +368,13 @@ udp_top u_udp_top(
 	.e_txd(e_txd)	
 );
 
-//ila_2 your_instance_name (
-//	.clk(e_rxc), // input wire clk
-
-
-//	.probe0(r_eth_tx_data), // input wire [31:0]  probe0  
-//	.probe1(s_eth_tx_start), // input wire [0:0]  probe1 
-//	.probe2(0), // input wire [7:0]  probe2 
-//	.probe3(0), // input wire [0:0]  probe3 
-//	.probe4(0) // input wire [0:0]  probe4
-//);
-ila_0 your_instance_name (
+/* we meet some timing violations here, udp packets collapse if the ila is removed*/
+/* strangely, the following ila improves total timing performace, by changing routing structure */
+ila_0 eth_ila (
 	.clk(e_rxc), // input wire clk
 	.probe0(e_txd), // input wire [7:0] probe0
-	.probe1(e_rxc), // input wire [0:0]  probe1
-	.probe2({31'b0, s_eth_tx_start}) // input wire [31:0]  probe2
+	.probe1(0),
+	.probe2(0)
 );
 
 endmodule

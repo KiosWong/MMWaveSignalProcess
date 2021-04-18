@@ -120,16 +120,6 @@ u_vco_comp
 	.vco_out_done_o(w_vco_out_done)
 );
 
-//ila_2 your_instance_name (
-//	.clk(clk), // input wire clk
-
-
-//	.probe0({22'd0, vco_out_o}), // input wire [31:0]  probe0  
-//	.probe1(vco_da_clk_o), // input wire [0:0]  probe1 
-//	.probe2(8'd0), // input wire [7:0]  probe2 
-//	.probe3(1'd0), // input wire [0:0]  probe3 
-//	.probe4(1'd0) // input wire [0:0]  probe4
-//);
 
 
 endmodule

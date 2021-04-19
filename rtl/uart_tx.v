@@ -110,7 +110,7 @@ module uart_tx
 (
 	input  clk,
 	input  rst_n,
-	input  [3:0]baud_sel_i,
+	input  [2:0]baud_sel_i,
 	input  rs232_tx_start,
 	input  [7:0]rs232_tx_data_i,
 	output reg rs232_tx_int,

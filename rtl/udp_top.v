@@ -28,7 +28,18 @@ module udp_top(
 );
 
 assign e_rst = 1'b1; 
-assign e_gtxc=e_rxc;	
+//assign e_gtxc=e_rxc;	
+
+clk_wiz_1 gtxc_pll
+(
+	// Clock out ports
+	.clk_out1(e_gtxc),     // output clk_out1
+	// Status and control signals
+	.reset(~rst_n), // input reset
+	.locked(1'b1),       // output locked
+	// Clock in ports
+	.clk_in1(e_rxc)
+);   
 
 udp u_udp
 (

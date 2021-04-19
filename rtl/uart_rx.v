@@ -170,13 +170,11 @@ always @(posedge clk or negedge rst_n) begin
 	else if(sample_clk_en == 0) begin
 		sample_clk_cnt <= 7'd0;
 	end
+	else if(sample_clk_cnt == 7'd89) begin
+		sample_clk_cnt <= 0;
+	end
 	else if(sample_clk) begin
-		if(sample_clk_cnt == 7'd89) begin
-			sample_clk_cnt <= 0;
-		end
-		else begin
-			sample_clk_cnt <= sample_clk_cnt + 1'b1;
-		end
+		sample_clk_cnt <= sample_clk_cnt + 1'b1;
 	end
 end
 

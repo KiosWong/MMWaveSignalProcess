@@ -2,20 +2,24 @@
 
 module ipsend
 (
-	input              	clk,
-	output reg         	txen,
-	output reg         	txer,
-	output reg [7:0]   	dataout,
-	input  [31:0]  		crc,
-	output reg			data_req,
-	input  [31:0]  		datain,
-	output reg         	crcen,
-	output reg         	crcre,
-	input 				tx_start,
+	input  clk,
+	output reg txen,
+	output reg txer,
+	output reg [7:0] dataout,
+	input  [31:0] crc,
+	output reg data_req,
+	input  [31:0] datain,
+	output reg crcen,
+	output reg crcre,
+	input  tx_start,
 	
-	input      [15:0]  	tx_data_length,
-	input      [15:0]  	tx_total_length
-				  
+	input  [15:0]tx_data_length,
+	input  [15:0]tx_total_length,
+	
+	input  [31:0]src_ip_addr,
+	input  [31:0]dst_ip_addr,
+	input  [15:0]src_port,
+	input  [15:0]dst_port
 );
 
 reg [31:0] datain_reg;
@@ -38,12 +42,10 @@ parameter 	UDP_TX_IDLE = 		7'b000_0000,
 			UDP_TX_SENDDATA = 	7'b010_0000,
 			UDP_TX_SENDCRC = 	7'b100_0000;
 
-reg [7:0]udp_tx_n_state;
-reg [7:0]udp_tx_c_state;
+reg [7:0]udp_tx_state;
 
 initial begin
-	udp_tx_c_state <= UDP_TX_IDLE;
-	udp_tx_n_state <= UDP_TX_IDLE;
+	udp_tx_state <= UDP_TX_IDLE;
 	preamble[0] <= 8'h55;
 	preamble[1] <= 8'h55;
 	preamble[2] <= 8'h55;
@@ -70,57 +72,9 @@ initial begin
 	i <= 5'd0;
 	j <= 5'd0;
 end
- 
-always@(negedge clk) begin
-	case(udp_tx_c_state)
-		UDP_TX_IDLE: begin 
-			if(tx_start) begin
-				udp_tx_n_state <= UDP_TX_START;
-			end
-		end
-		UDP_TX_START: begin
-			udp_tx_n_state <= UDP_TX_MAKE;
-		end
-		UDP_TX_MAKE: begin
-			if(i == 5'd2-1) begin
-				udp_tx_n_state <= UDP_TX_SEND55;
-			end
-		end
-		UDP_TX_SEND55: begin
-			if(i == 5'd7-1) begin
-				udp_tx_n_state <= UDP_TX_SENDMAC;
-			end
-		end
-		UDP_TX_SENDMAC: begin
-			if(i == 5'd13-1) begin
-				udp_tx_n_state <= UDP_TX_SENDHEADER;
-			end
-		end
-		UDP_TX_SENDHEADER: begin
-			if(j == 5'd6 && i == 5'd3-1) begin
-				udp_tx_n_state <= UDP_TX_SENDDATA;	
-			end
-		end
-		UDP_TX_SENDDATA: begin
-			if(tx_data_counter == tx_data_length - 9) begin       //send last payload byte
-				udp_tx_n_state <= UDP_TX_SENDCRC;
-			end
-		end
-		UDP_TX_SENDCRC: begin
-			if(i == 5'd3-1) begin
-				udp_tx_n_state <= UDP_TX_IDLE;
-			end
-		end
-		default: udp_tx_n_state <= UDP_TX_IDLE;
-	endcase
-end
-
-always @(negedge clk) begin
-	udp_tx_c_state <= udp_tx_n_state;
-end
 
 always@(negedge clk) begin
-	case(udp_tx_c_state)
+	case(udp_tx_state)
 		UDP_TX_IDLE: begin 
 			txer<=1'b0;
 			txen<=1'b0;
@@ -137,6 +91,9 @@ always@(negedge clk) begin
 			ip_header[5] <= 32'b0;
 			ip_header[6] <= 32'b0;
 			data_req <= 0;
+			if(tx_start) begin
+				udp_tx_state <= UDP_TX_START;
+			end
 		end
 		UDP_TX_START: begin
 			data_req <= 1;
@@ -144,10 +101,11 @@ always@(negedge clk) begin
 			ip_header[1][31:16]<=ip_header[1][31:16] + 1'b1;
 			ip_header[1][15:0] <= 16'h4000;
 			ip_header[2] <= 32'h80110000;
-			ip_header[3] <= 32'hc0a80002;
-			ip_header[4] <= 32'hc0a80003;
-			ip_header[5] <= 32'h1f901f90;
+			ip_header[3] <= src_ip_addr;
+			ip_header[4] <= dst_ip_addr;
+			ip_header[5] <= {src_port, dst_port};
 			ip_header[6] <= {tx_data_length, 16'h0000};
+			udp_tx_state <= UDP_TX_MAKE;
 		end
 		UDP_TX_MAKE: begin
 			data_req <= 0;
@@ -164,6 +122,7 @@ always@(negedge clk) begin
 				5'd2: begin
 					ip_header[2][15:0] <= ~check_buffer[15:0]; 
 					i <= 0;
+					udp_tx_state <= UDP_TX_SEND55;
 				end
 				default: i <= 0;
 			endcase
@@ -174,6 +133,7 @@ always@(negedge clk) begin
 			if(i == 5'd7) begin
 				dataout[7:0] <= preamble[i][7:0];
 				i <= 0;
+				udp_tx_state <= UDP_TX_SENDMAC;
 			end
 			else begin                        
 				dataout[7:0] <= preamble[i][7:0];
@@ -186,6 +146,7 @@ always@(negedge clk) begin
 			if(i == 5'd13) begin
 				dataout[7:0] <= mac_addr[i][7:0];
 				i <= 0;
+				udp_tx_state <= UDP_TX_SENDHEADER;
 			end
 			else begin                        
 				dataout[7:0] <= mac_addr[i][7:0];
@@ -212,6 +173,7 @@ always@(negedge clk) begin
 						dataout[7:0] <= ip_header[j][7:0];
 						i <= 0;
 						j <= 0;	
+						udp_tx_state <= UDP_TX_SENDDATA;
 					end
 					default: begin
 						txer <= 1'b1;
@@ -264,6 +226,7 @@ always@(negedge clk) begin
 					5'd3: begin
 						dataout[7:0] <= datain_reg[7:0];
 						i <= 0;
+						udp_tx_state <= UDP_TX_SENDCRC;
 					end
 					default: begin
 						txer <= 1'b1;
@@ -316,6 +279,7 @@ always@(negedge clk) begin
 				5'd3: begin
 					dataout[7:0]<={~crc[0], ~crc[1], ~crc[2], ~crc[3], ~crc[4], ~crc[5], ~crc[6], ~crc[7]};
 					i <= 0;
+					udp_tx_state <= UDP_TX_IDLE;
 				end
 				default: txer<=1'b1;
 			endcase
@@ -324,23 +288,6 @@ always@(negedge clk) begin
 	endcase
 
 end
-
-//always @(*) begin
-//	if((udp_tx_c_state == UDP_TX_SENDDATA && (tx_data_counter < tx_data_length - 10) && i == 5'd2) || udp_tx_c_state == UDP_TX_START) begin
-//		data_req = 1;
-//	end
-//	else begin
-//		data_req = 0;
-//	end
-//end
-
-//ila_0 eth_tx_ila (
-//	.clk(clk), // input wire clk
-//	.probe0(udp_tx_n_state), // input wire [7:0] probe0
-//	.probe1(0),
-//	.probe2(0)
-//);
-
 
 endmodule
 

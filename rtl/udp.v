@@ -6,24 +6,20 @@ module udp
 (
 	input  wire			reset_n,
 	input  wire         e_rxc,
-	input  wire [7:0]   e_rxd, 
-	input  wire         e_rxdv,
 	output wire	        e_txen,
 	output wire	[7:0]   e_txd,                              
 	output wire         e_txer,		
-	
-	output wire 	    data_o_valid,                        //接收数据有效信号// 
-	output wire [31:0]  ram_wr_data,                         //接收到的32bit IP包数�?//  
-	output wire [15:0]  rx_total_length,                     //接收IP包的总长�?
-	
-	output wire [15:0]  rx_data_length,		                 //接收IP包的数据长度/
 	
 	input 				tx_start,
 	output wire			tx_data_req,
 	input  wire [31:0]  tx_data,                         //ram读出的数�?
 	input  wire [15:0]  tx_data_length,                      //发�?�IP包的数据长度/
 	input  wire [15:0]  tx_total_length,                     //发�?�IP包的总长�?/
-	output wire         data_received
+	
+	input  [31:0]src_ip_addr,
+	input  [31:0]dst_ip_addr,
+	input  [15:0]src_port,
+	input  [15:0]dst_port
 );
 
 wire	[31:0] crcnext;
@@ -44,10 +40,13 @@ ipsend ipsend_inst
 	.crcre(crcreset),
 	.tx_start(tx_start),
 	.tx_data_length(tx_data_length),
-	.tx_total_length(tx_total_length)
+	.tx_total_length(tx_total_length),
+	.src_ip_addr(src_ip_addr),
+	.dst_ip_addr(dst_ip_addr),
+	.src_port(src_port),
+	.dst_port(dst_port)
 );
 	
-
 crc	crc_inst
 (
 	.Clk(e_rxc),
@@ -58,25 +57,4 @@ crc	crc_inst
 	.CrcNext(crcnext)
 );
 
-iprecieve iprecieve_inst
-(
-	.clk(e_rxc),
-	.datain(e_rxd),
-	.e_rxdv(e_rxdv),	
-	.clr(reset_n),
-	.board_mac(),	
-	.pc_mac(),
-	.IP_Prtcl(),
-	.IP_layer(),
-	.pc_IP(),	
-	.board_IP(),
-	.UDP_layer(),
-	.data_o(ram_wr_data),	
-	.valid_ip_P(),
-	.rx_total_length(rx_total_length),
-	.data_o_valid(data_o_valid),                                       
-	.rx_data_length(rx_data_length),
-	.data_received(data_received)	
-);
-	
 endmodule
